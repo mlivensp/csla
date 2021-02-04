@@ -50,7 +50,7 @@ namespace Csla
         _contextManagerType = Type.GetType("Csla.Xaml.ApplicationContextManager, Csla.Xaml");
 
       if (_contextManagerType != null)
-        _contextManager = (IContextManager)Reflection.MethodCaller.CreateInstance(_contextManagerType);
+        _contextManager = (IContextManager)Activator.CreateInstance(_contextManagerType);
 
       if (_contextManager == null)
         _contextManager = new ApplicationContextManager();
@@ -59,7 +59,7 @@ namespace Csla
       {
         _webManagerType = Type.GetType("Csla.Web.ApplicationContextManager, Csla.Web");
         if (_webManagerType != null)
-          WebContextManager = (IContextManager)Reflection.MethodCaller.CreateInstance(_webManagerType);
+          WebContextManager = (IContextManager)Activator.CreateInstance(_webManagerType);
       }
     }
 
@@ -843,23 +843,17 @@ namespace Csla
       internal get
       {
         var result = ContextManager?.GetServiceProvider();
-        return result;       
+        if (result == null)
+        {
+          var def = DefaultServiceProvider;
+          if (def != null)
+          {
+            result = CurrentServiceProvider = def.CreateScope().ServiceProvider;
+          }
+        }
+        return result;
       }
       set => ContextManager.SetServiceProvider(value);
-    }
-
-    /// <summary>
-    /// Gets the service provider scoped for this application context.
-    /// </summary>
-    internal static IServiceProvider ScopedServiceProvider
-    {
-      get
-      {
-        if (CurrentServiceProvider != null)
-          return CurrentServiceProvider;
-        else
-          return null;
-      }
     }
 
     #endregion
